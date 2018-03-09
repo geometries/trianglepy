@@ -26,7 +26,7 @@ def setup(*args, **kwargs):
     except:
         print(DASH_SEPARATOR)
         print("Sorry, your build failed. Try rerunning configure.py with "
-                "different options.")
+              "different options.")
         print(DASH_SEPARATOR)
         raise
 
@@ -35,6 +35,7 @@ class NumpyExtension(Extension):
     # nicked from
     # http://mail.python.org/pipermail/distutils-sig/2007-September/008253.html
     # solution by Michael Hoffmann
+
     def __init__(self, *args, **kwargs):
         Extension.__init__(self, *args, **kwargs)
         self._include_dirs = self.include_dirs
@@ -59,10 +60,12 @@ class NumpyExtension(Extension):
     def del_include_dirs(self):
         pass
 
-    include_dirs = property(get_include_dirs, set_include_dirs, del_include_dirs)
+    include_dirs = property(
+        get_include_dirs, set_include_dirs, del_include_dirs)
 
 
 class PyUblasExtension(NumpyExtension):
+
     def get_module_include_path(self, name):
         from pkg_resources import Requirement, resource_filename
         return resource_filename(Requirement.parse(name), "%s/include" % name)
@@ -73,13 +76,14 @@ class PyUblasExtension(NumpyExtension):
 
 
 class HedgeExtension(PyUblasExtension):
+
     @property
     def include_dirs(self):
         return self._include_dirs + [
-                self.get_numpy_incpath(),
-                self.get_module_include_path("pyublas"),
-                self.get_module_include_path("hedge"),
-                ]
+            self.get_numpy_incpath(),
+            self.get_module_include_path("pyublas"),
+            self.get_module_include_path("hedge"),
+        ]
 
 
 # {{{ tools
@@ -99,34 +103,11 @@ def humanize(sym_str):
     words = sym_str.lower().replace("_", " ").split(" ")
     return " ".join([word.capitalize() for word in words])
 
-# }}}
-
-
-# {{{ siteconf handling
 
 def get_config(schema=None, warn_about_no_config=True):
     if schema is None:
         from setup import get_config_schema
         schema = get_config_schema()
-
-    if (not schema.have_config() and not schema.have_global_config()
-            and warn_about_no_config):
-        print("*************************************************************")
-        print("*** I have detected that you have not run configure.py.")
-        print("*************************************************************")
-        print("*** Additionally, no global config files were found.")
-        print("*** I will go ahead with the default configuration.")
-        print("*** In all likelihood, this will not work out.")
-        print("*** ")
-        print("*** See README_SETUP.txt for more information.")
-        print("*** ")
-        print("*** If the build does fail, just re-run configure.py with the")
-        print("*** correct arguments, and then retry. Good luck!")
-        print("*************************************************************")
-        print("*** HIT Ctrl-C NOW IF THIS IS NOT WHAT YOU WANT")
-        print("*************************************************************")
-
-        count_down_delay(delay=10)
 
     config = expand_options(schema.read_config())
     schema.update_config_from_and_modify_command_line(config, sys.argv)
@@ -152,7 +133,7 @@ def hack_distutils(debug=False, fast_link=True, what_opt=3):
         cflags = cvars.get('OPT')
         if cflags:
             cflags = remove_prefixes(cflags.split(),
-                    ['-g', '-O', '-Wstrict-prototypes', '-DNDEBUG'])
+                                     ['-g', '-O', '-Wstrict-prototypes', '-DNDEBUG'])
             if debug:
                 cflags.append("-g")
             else:
@@ -173,7 +154,7 @@ def hack_distutils(debug=False, fast_link=True, what_opt=3):
                 ldsharedflags = cvars.get(varname)
                 if ldsharedflags:
                     ldsharedflags = remove_prefixes(ldsharedflags.split(),
-                            ['-Wl,-O'])
+                                                    ['-Wl,-O'])
                     cvars[varname] = str.join(' ', ldsharedflags)
 
 # }}}
@@ -224,10 +205,11 @@ def expand_value(v, options):
 
 def expand_options(options):
     return dict(
-            (k, expand_value(v, options)) for k, v in options.items())
+        (k, expand_value(v, options)) for k, v in options.items())
 
 
 class ConfigSchema:
+
     def __init__(self, options, conf_file="siteconf.py", conf_dir="."):
         self.optdict = dict((opt.name, opt) for opt in options)
         self.options = options
@@ -342,7 +324,7 @@ class ConfigSchema:
                 pass
             else:
                 raise KeyError("invalid config key in %s: %s" % (
-                        filename, key))
+                    filename, key))
 
     def update_config_from_and_modify_command_line(self, config, argv):
         cfg_prefix = "--conf:"
@@ -354,7 +336,7 @@ class ConfigSchema:
             if arg.startswith(cfg_prefix):
                 del argv[i]
                 self.update_from_python_snippet(
-                        config, arg[len(cfg_prefix):], "<command line>")
+                    config, arg[len(cfg_prefix):], "<command line>")
             else:
                 i += 1
 
@@ -396,10 +378,11 @@ class ConfigSchema:
 
     def make_substitutions(self, config):
         return dict((opt.name, opt.value_to_str(config[opt.name]))
-                for opt in self.options)
+                    for opt in self.options)
 
 
 class Option(object):
+
     def __init__(self, name, default=None, help=None):
         self.name = name
         self.default = default
@@ -410,13 +393,13 @@ class Option(object):
 
     def metavar(self):
         last_underscore = self.name.rfind("_")
-        return self.name[last_underscore+1:]
+        return self.name[last_underscore + 1:]
 
     def get_help(self, default):
         result = self.help
         if self.default:
             result += " (default: %s)" % self.value_to_str(
-                    default_or(default, self.default))
+                default_or(default, self.default))
         return result
 
     def value_to_str(self, default):
@@ -435,6 +418,7 @@ class Option(object):
 
 
 class Switch(Option):
+
     def add_to_configparser(self, parser, default=None):
         if not isinstance(self.default, bool):
             raise ValueError("Switch options must have a default")
@@ -459,6 +443,7 @@ class Switch(Option):
 
 
 class StringListOption(Option):
+
     def value_to_str(self, default):
         if default is None:
             return None
@@ -484,27 +469,31 @@ class StringListOption(Option):
 
 
 class IncludeDir(StringListOption):
+
     def __init__(self, lib_name, default=None, human_name=None, help=None):
         StringListOption.__init__(self, "%s_INC_DIR" % lib_name, default,
-                help=help or ("Include directories for %s"
-                % (human_name or humanize(lib_name))))
+                                  help=help or ("Include directories for %s"
+                                                % (human_name or humanize(lib_name))))
 
 
 class LibraryDir(StringListOption):
+
     def __init__(self, lib_name, default=None, human_name=None, help=None):
         StringListOption.__init__(self, "%s_LIB_DIR" % lib_name, default,
-                help=help or ("Library directories for %s"
-                % (human_name or humanize(lib_name))))
+                                  help=help or ("Library directories for %s"
+                                                % (human_name or humanize(lib_name))))
 
 
 class Libraries(StringListOption):
+
     def __init__(self, lib_name, default=None, human_name=None, help=None):
         StringListOption.__init__(self, "%s_LIBNAME" % lib_name, default,
-                help=help or ("Library names for %s (without lib or .so)"
-                % (human_name or humanize(lib_name))))
+                                  help=help or ("Library names for %s (without lib or .so)"
+                                                % (human_name or humanize(lib_name))))
 
 
 class BoostLibraries(Libraries):
+
     def __init__(self, lib_base_name, default_lib_name=None):
         if default_lib_name is None:
             if lib_base_name == "python":
@@ -513,13 +502,13 @@ class BoostLibraries(Libraries):
                 default_lib_name = "boost_%s" % lib_base_name
 
         Libraries.__init__(self, "BOOST_%s" % lib_base_name.upper(),
-                [default_lib_name],
-                help="Library names for Boost C++ %s library (without lib or .so)"
-                % humanize(lib_base_name))
+                           [default_lib_name],
+                           help="Library names for Boost C++ %s library (without lib or .so)"
+                           % humanize(lib_base_name))
 
 
 def set_up_shipped_boost_if_requested(project_name, conf, source_path=None,
-        boost_chrono=False):
+                                      boost_chrono=False):
     """Set up the package to use a shipped version of Boost.
 
     Return a tuple of a list of extra C files to build and extra
@@ -537,7 +526,7 @@ def set_up_shipped_boost_if_requested(project_name, conf, source_path=None,
         if not exists("%s/boost/version.hpp" % source_path):
             print(DASH_SEPARATOR)
             print("The shipped Boost library was not found, but "
-                    "USE_SHIPPED_BOOST is True.")
+                  "USE_SHIPPED_BOOST is True.")
             print("(The files should be under %s/.)" % source_path)
             print(DASH_SEPARATOR)
             print("If you got this package from git, you probably want to do")
@@ -563,26 +552,26 @@ def set_up_shipped_boost_if_requested(project_name, conf, source_path=None,
 
         from glob import glob
         source_files = (glob(source_path + "/libs/*/*/*/*.cpp")
-                + glob(source_path + "/libs/*/*/*.cpp")
-                + glob(source_path + "/libs/*/*.cpp"))
+                        + glob(source_path + "/libs/*/*/*.cpp")
+                        + glob(source_path + "/libs/*/*.cpp"))
 
         # make sure next line succeeds even on Windows
         source_files = [f.replace("\\", "/") for f in source_files]
 
         source_files = [f for f in source_files
-                if not f.startswith(source_path + "/libs/thread/src")]
+                        if not f.startswith(source_path + "/libs/thread/src")]
 
         if sys.platform == "win32":
             source_files += glob(
-                    source_path + "/libs/thread/src/win32/*.cpp")
+                source_path + "/libs/thread/src/win32/*.cpp")
             source_files += glob(
-                    source_path + "/libs/thread/src/tss_null.cpp")
+                source_path + "/libs/thread/src/tss_null.cpp")
         else:
             source_files += glob(
-                    source_path + "/libs/thread/src/pthread/*.cpp")
+                source_path + "/libs/thread/src/pthread/*.cpp")
 
         source_files = [f for f in source_files
-                if not f.endswith("once_atomic.cpp")]
+                        if not f.endswith("once_atomic.cpp")]
 
         from os.path import isdir
         main_boost_inc = source_path + "/boost"
@@ -598,14 +587,14 @@ def set_up_shipped_boost_if_requested(project_name, conf, source_path=None,
                 copytree(main_boost_inc, bpl_project_boost_inc)
 
         defines = {
-                # do not pick up libboost link dependency on windows
-                "BOOST_ALL_NO_LIB": 1,
-                "BOOST_THREAD_BUILD_DLL": 1,
+            # do not pick up libboost link dependency on windows
+            "BOOST_ALL_NO_LIB": 1,
+            "BOOST_THREAD_BUILD_DLL": 1,
 
-                "BOOST_MULTI_INDEX_DISABLE_SERIALIZATION": 1,
-                "BOOST_PYTHON_SOURCE": 1,
-                "boost": '%sboost' % project_name,
-                }
+            "BOOST_MULTI_INDEX_DISABLE_SERIALIZATION": 1,
+            "BOOST_PYTHON_SOURCE": 1,
+            "boost": '%sboost' % project_name,
+        }
 
         if boost_chrono is False:
             defines["BOOST_THREAD_DONT_USE_CHRONO"] = 1
@@ -624,8 +613,8 @@ def make_boost_base_options():
         IncludeDir("BOOST", []),
         LibraryDir("BOOST", []),
         Option("BOOST_COMPILER", default="gcc43",
-            help="The compiler with which Boost C++ was compiled, e.g. gcc43"),
-        ]
+               help="The compiler with which Boost C++ was compiled, e.g. gcc43"),
+    ]
 
 
 def configure_frontend():
@@ -644,19 +633,19 @@ def configure_frontend():
     description = "generate a configuration file for this software package"
     parser = OptionParser(description=description)
     parser.add_option(
-            "--python-exe", dest="python_exe", default=sys.executable,
-            help="Which Python interpreter to use", metavar="PATH")
+        "--python-exe", dest="python_exe", default=sys.executable,
+        help="Which Python interpreter to use", metavar="PATH")
 
     parser.add_option("--prefix", default=None,
-            help="Ignored")
+                      help="Ignored")
     parser.add_option("--enable-shared", help="Ignored", action="store_false")
     parser.add_option("--disable-static", help="Ignored", action="store_false")
     parser.add_option("--update-user",
-            help="Update user config file (%s)" % schema.user_conf_file,
-            action="store_true")
+                      help="Update user config file (%s)" % schema.user_conf_file,
+                      action="store_true")
     parser.add_option("--update-global",
-            help="Update global config file (%s)" % schema.global_conf_file,
-            action="store_true")
+                      help="Update global config file (%s)" % schema.global_conf_file,
+                      action="store_true")
 
     schema.add_to_configparser(parser, schema.read_config())
 
@@ -684,7 +673,7 @@ def substitute(substitutions, fname):
     var_re = re.compile(r"\$\{([A-Za-z_0-9]+)\}")
     string_var_re = re.compile(r"\$str\{([A-Za-z_0-9]+)\}")
 
-    fname_in = fname+".in"
+    fname_in = fname + ".in"
     lines = open(fname_in, "r").readlines()
     new_lines = []
     for l in lines:
@@ -694,7 +683,8 @@ def substitute(substitutions, fname):
             match = var_re.search(l)
             if match:
                 varname = match.group(1)
-                l = l[:match.start()] + str(substitutions[varname]) + l[match.end():]
+                l = l[:match.start()] + str(substitutions[varname]) + \
+                    l[match.end():]
                 made_change = True
 
             match = string_var_re.search(l)
@@ -710,7 +700,7 @@ def substitute(substitutions, fname):
                 made_change = True
         new_lines.append(l)
     new_lines.insert(1, "# DO NOT EDIT THIS FILE -- "
-            "it was generated by configure.py\n")
+                     "it was generated by configure.py\n")
     new_lines.insert(2, "# %s\n" % (" ".join(sys.argv)))
     open(fname, "w").write("".join(new_lines))
 
@@ -727,7 +717,8 @@ def _run_git_command(cmd):
         popen = Popen(["git"] + cmd, stdout=PIPE)
         stdout, stderr = popen.communicate()
         if popen.returncode != 0:
-            git_error = "git returned error code %d: %s" % (popen.returncode, stderr)
+            git_error = "git returned error code %d: %s" % (
+                popen.returncode, stderr)
     except OSError:
         git_error = "(OS error, likely git not found)"
 
@@ -779,47 +770,47 @@ def check_git_submodules():
 
         if status == "+":
             pkg_warnings.append("version of '%s' is not what this "
-                    "outer package wants" % package)
+                                "outer package wants" % package)
         elif status == "-":
             pkg_warnings.append("subpackage '%s' is not initialized"
-                    % package)
+                                % package)
         elif status == " ":
             pass
         else:
             pkg_warnings.append("subpackage '%s' has unrecognized status '%s'"
-                    % package)
+                                % package)
 
     if pkg_warnings:
-            print(DASH_SEPARATOR)
-            print("git submodules are not up-to-date or in odd state")
-            print(DASH_SEPARATOR)
-            print("If this makes no sense, you probably want to say")
-            print("")
-            print(" $ git submodule update --init")
-            print("")
-            print("to fetch what you are presently missing and "
-                    "move on with your life.")
-            print("If you got this from a distributed package on the "
-                    "net, that package is")
-            print("broken and should be fixed. Please inform whoever "
-                    "gave you this package.")
-            print("")
-            print("These issues were found:")
-            for w in pkg_warnings:
-                print("  %s" % w)
-            print("")
-            print("I will try to initialize the submodules for you "
-                    "after a short wait.")
-            print(DASH_SEPARATOR)
-            print("Hit Ctrl-C now if you'd like to think about the situation.")
-            print(DASH_SEPARATOR)
+        print(DASH_SEPARATOR)
+        print("git submodules are not up-to-date or in odd state")
+        print(DASH_SEPARATOR)
+        print("If this makes no sense, you probably want to say")
+        print("")
+        print(" $ git submodule update --init")
+        print("")
+        print("to fetch what you are presently missing and "
+              "move on with your life.")
+        print("If you got this from a distributed package on the "
+              "net, that package is")
+        print("broken and should be fixed. Please inform whoever "
+              "gave you this package.")
+        print("")
+        print("These issues were found:")
+        for w in pkg_warnings:
+            print("  %s" % w)
+        print("")
+        print("I will try to initialize the submodules for you "
+              "after a short wait.")
+        print(DASH_SEPARATOR)
+        print("Hit Ctrl-C now if you'd like to think about the situation.")
+        print(DASH_SEPARATOR)
 
-            from os.path import exists
-            if not exists(".dirty-git-ok"):
-                count_down_delay(delay=10)
-                stdout, git_error = _run_git_command(
-                        ["submodule", "update", "--init"])
-                if git_error is None:
-                    print(DASH_SEPARATOR)
-                    print("git submodules initialized successfully")
-                    print(DASH_SEPARATOR)
+        from os.path import exists
+        if not exists(".dirty-git-ok"):
+            count_down_delay(delay=10)
+            stdout, git_error = _run_git_command(
+                ["submodule", "update", "--init"])
+            if git_error is None:
+                print(DASH_SEPARATOR)
+                print("git submodules initialized successfully")
+                print(DASH_SEPARATOR)

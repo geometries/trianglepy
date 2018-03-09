@@ -1,6 +1,4 @@
 cmake_minimum_required(VERSION 3.5)
-# by default use python3
-# for python2 use -Dpy_version=2
 
 if (NOT py_version LESS 3)
     find_package( Boost COMPONENTS "python3")

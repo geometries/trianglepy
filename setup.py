@@ -3,8 +3,6 @@ import sys
 import os
 
 
-# {{{ use cmake to find boost
-
 def get_boost_defaults_from_cmake():
     boost_variables = ["VERSION", "INCLUDE_DIRS", "LIB_DIRS", "LIBRARIES"]
     boost_dict = {}
@@ -43,9 +41,9 @@ def get_boost_defaults_from_cmake():
         print("used cmake to detect boost")
         bpl_lib_name = os.path.basename(boost_dict["LIBRARIES"])
         bpl_lib_name = (bpl_lib_name
-                .replace(".lib", "")
-                .replace("lib", "")
-                .replace(".so", ""))
+                        .replace(".lib", "")
+                        .replace("lib", "")
+                        .replace(".so", ""))
 
         boost_conf["BOOST_INC_DIR"] = [boost_dict["INCLUDE_DIRS"]]
         boost_conf["BOOST_LIB_DIR"] = [boost_dict["LIB_DIRS"]]
@@ -53,12 +51,14 @@ def get_boost_defaults_from_cmake():
 
     return boost_conf
 
-# }}}
-
 
 def get_config_schema():
-    from aksetup_helper import (ConfigSchema,
-            BoostLibraries, Switch, StringListOption, IncludeDir, LibraryDir)
+    from helper_setup import (ConfigSchema,
+                              BoostLibraries,
+                              Switch,
+                              StringListOption,
+                              IncludeDir,
+                              LibraryDir)
 
     cmake_boost_conf = get_boost_defaults_from_cmake()
 
@@ -66,21 +66,24 @@ def get_config_schema():
         IncludeDir("BOOST", cmake_boost_conf.get("BOOST_INC_DIR", [])),
         LibraryDir("BOOST", cmake_boost_conf.get("BOOST_LIB_DIR", [])),
         BoostLibraries("python",
-            default_lib_name=cmake_boost_conf.get("BOOST_PYTHON_LIBNAME")),
+                       default_lib_name=cmake_boost_conf.get("BOOST_PYTHON_LIBNAME")),
 
         Switch("USE_SHIPPED_BOOST", True, "Use included Boost library"),
 
         StringListOption("CXXFLAGS", [],
-            help="Any extra C++ compiler options to include"),
+                         help="Any extra C++ compiler options to include"),
         StringListOption("LDFLAGS", [],
-            help="Any extra linker options to include"),
-        ])
+                         help="Any extra linker options to include"),
+    ])
 
 
 def main():
-    from aksetup_helper import (hack_distutils,
-            get_config, setup, Extension, set_up_shipped_boost_if_requested,
-            check_git_submodules)
+    from helper_setup import (hack_distutils,
+                              get_config,
+                              setup,
+                              Extension,
+                              set_up_shipped_boost_if_requested,
+                              check_git_submodules)
 
     check_git_submodules()
 
@@ -88,19 +91,19 @@ def main():
     conf = get_config(get_config_schema())
 
     TRI_EXTRA_OBJECTS, TRI_EXTRA_DEFINES = \
-            set_up_shipped_boost_if_requested("meshpy", conf)
+        set_up_shipped_boost_if_requested("trianglepy", conf)
     TET_EXTRA_OBJECTS, TET_EXTRA_DEFINES = TRI_EXTRA_OBJECTS, TRI_EXTRA_DEFINES
 
     triangle_macros = [
-            ("EXTERNAL_TEST", 1),
-            ("ANSI_DECLARATORS", 1),
-            ("TRILIBRARY", 1),
-            ] + list(TRI_EXTRA_DEFINES.items())
+        ("EXTERNAL_TEST", 1),
+        ("ANSI_DECLARATORS", 1),
+        ("TRILIBRARY", 1),
+    ] + list(TRI_EXTRA_DEFINES.items())
 
     tetgen_macros = [
-            ("TETLIBRARY", 1),
-            ("SELF_CHECK", 1),
-            ] + list(TET_EXTRA_DEFINES.items())
+        ("TETLIBRARY", 1),
+        ("SELF_CHECK", 1),
+    ] + list(TET_EXTRA_DEFINES.items())
 
     # }}}
 
@@ -108,19 +111,20 @@ def main():
     library_dirs = conf["BOOST_LIB_DIR"]
     libraries = conf["BOOST_PYTHON_LIBNAME"]
 
-    init_filename = "meshpy/__init__.py"
-    exec(compile(open(init_filename, "r").read(), init_filename, "exec"), conf)
+    # load version into current namespace
+    with open('trianglepy/version.py', 'r') as f:
+        line = f.read().strip()
+    version = eval(line.split('=')[-1])
 
     import codecs
-    setup(name="MeshPy",
-          version=conf["version"],
-          description="Triangular and Tetrahedral Mesh Generator",
+    setup(name="trianglepy",
+          version=version,
+          description="Triangular Mesh Generator",
           long_description=codecs.open("README.rst", "r", "utf-8").read(),
           author="Andreas Kloeckner",
           author_email="inform@tiker.net",
           license=("MIT for the wrapper/non-commercial for "
-              "the Triangle/GNU Affero Public License for TetGen"),
-          url="http://mathema.tician.de/software/meshpy",
+                   "the Triangle/GNU Affero Public License for TetGen"),
           classifiers=[
               'Development Status :: 4 - Beta',
               'Intended Audience :: Developers',
@@ -131,31 +135,23 @@ def main():
               'Natural Language :: English',
               'Programming Language :: C++',
               'Programming Language :: Python',
-              'Programming Language :: Python :: 2.6',
               'Programming Language :: Python :: 2.7',
-              'Programming Language :: Python :: 3',
-              'Programming Language :: Python :: 3.2',
               'Programming Language :: Python :: 3.3',
               'Programming Language :: Python :: 3.4',
+              'Programming Language :: Python :: 3.5',
+              'Programming Language :: Python :: 3.6',
               'Topic :: Multimedia :: Graphics :: 3D Modeling',
               'Topic :: Scientific/Engineering',
               'Topic :: Scientific/Engineering :: Mathematics',
               'Topic :: Scientific/Engineering :: Physics',
               'Topic :: Scientific/Engineering :: Visualization',
               'Topic :: Software Development :: Libraries',
-              ],
-
-          packages=["meshpy"],
-          install_requires=[
-                  "pytools>=2011.2",
-                  "pytest>=2",
-                  "numpy",
-                  "gmsh_interop",
-                  "six",
-                  ],
+          ],
+          packages=["trianglepy"],
+          install_requires=["numpy"],
           ext_modules=[
               Extension(
-                  "meshpy._triangle",
+                  "trianglepy._triangle",
                   ["src/cpp/wrap_triangle.cpp", "src/cpp/triangle.c"]
                   + TRI_EXTRA_OBJECTS,
                   include_dirs=include_dirs,
@@ -164,25 +160,8 @@ def main():
                   define_macros=triangle_macros,
                   extra_compile_args=conf["CXXFLAGS"],
                   extra_link_args=conf["LDFLAGS"],
-                  ),
-              Extension(
-                  "meshpy._tetgen",
-                  [
-                      "src/cpp/tetgen.cpp",
-                      "src/cpp/predicates.cpp",
-                      "src/cpp/wrap_tetgen.cpp"]
-                  + TET_EXTRA_OBJECTS,
-                  include_dirs=include_dirs,
-                  library_dirs=library_dirs,
-                  libraries=libraries,
-                  define_macros=tetgen_macros,
-                  extra_compile_args=conf["CXXFLAGS"],
-                  extra_link_args=conf["LDFLAGS"],
-                  ),
-              ])
-
+              )
+          ])
 
 if __name__ == '__main__':
     main()
-
-# vim: foldmethod=marker

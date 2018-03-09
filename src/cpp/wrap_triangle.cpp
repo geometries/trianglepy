@@ -196,18 +196,18 @@ int triunsuitable(vertex triorg, vertex tridest, vertex triapex, REAL area)
   }
   catch (error_already_set)
   {
-    std::cout << "[MeshPy warning] A Python exception occurred in "
+    std::cout << "[Trianglepy warning] A Python exception occurred in "
       "a Python refinement query:" << std::endl;
     PyErr_Print();
-    std::cout << "[MeshPy] Aborting now." << std::endl;
+    std::cout << "[Trianglepy] Aborting now." << std::endl;
     abort();
   }
   catch (std::exception &e)
   {
-    std::cout << "[MeshPy warning] An exception occurred in "
+    std::cout << "[Trianglepy warning] An exception occurred in "
       "a Python refinement query:" << std::endl
       << e.what() << std::endl;
-    std::cout << "[MeshPy] Aborting now." << std::endl;
+    std::cout << "[Trianglepy] Aborting now." << std::endl;
     abort();
   }
 }
