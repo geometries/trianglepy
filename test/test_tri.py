@@ -22,8 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from six.moves import range
-
 
 def test_triangle_refine():
     import trianglepy.triangle as triangle
@@ -74,5 +72,3 @@ def test_triangle_refine():
         mesh.element_volumes[i] = 1e-8
 
     mesh = triangle.refine(mesh)
-
-    build(mesh_info)
