@@ -4,7 +4,6 @@ env:
     - CIBW_BEFORE_BUILD="yum install -y gcc && pip install numpy cython"
     - CIBW_TEST_REQUIRES="nose2"
     - CIBW_TEST_COMMAND="cd {project}/test && nose2"
-    - CIBW_SKIP="cp33-*"
     - TWINE_USERNAME=mikedh
 
 matrix:

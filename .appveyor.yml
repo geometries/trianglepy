@@ -1,0 +1,12 @@
+environment:
+  TWINE_USERNAME: mikedh
+build_script:
+  - pip install cibuildwheel==0.2.0
+  - cibuildwheel --output-dir wheelhouse
+  - python -m pip install twine
+  - python -m twine upload wheelhouse/*.whl
+  
+artifacts:
+  - path: "wheelhouse\\*.whl"
+    name: Wheels
+
