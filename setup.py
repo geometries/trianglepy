@@ -120,7 +120,7 @@ def main():
     setup(name="trianglepy",
           version=version,
           description="Triangular Mesh Generator",
-          long_description=codecs.open("README.rst", "r", "utf-8").read(),
+          long_description=codecs.open("README.md", "r", "utf-8").read(),
           author="Andreas Kloeckner",
           author_email="inform@tiker.net",
           license=("MIT for the wrapper/non-commercial for "
