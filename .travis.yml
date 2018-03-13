@@ -1,27 +1,27 @@
 env:
   global:
-    - CIBW_BEFORE_BUILD_LINUX="yum install -y gcc && {pip} install numpy cython"
-    - CIBW_TEST_COMMAND="{python} {project}/test/test_tri.py"
+    - CIBW_BEFORE_BUILD_LINUX="yum install -y gcc && {pip} install numpy"
+    - CIBW_BEFORE_BUILD_MACOS="{pip} install numpy"
+    - CIBW_TEST_REQUIRES=nose
+    - CIBW_TEST_COMMAND="nosetests {project}/test"
     - CIBW_SKIP="cp33-*"
     - TWINE_USERNAME=mikedh
 
 matrix:
   include:
-    - dist: trusty
-      sudo: required
-      language: python
-      python: "3.6"
+    - sudo: required
       services:
         - docker
     - os: osx
       osx_image: xcode8.3
+      language: generic
 
 install:
   - if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then
       brew update;
       brew upgrade python;
     fi
-  - pip3 install cibuildwheel==0.6.0
+  - pip3 install cibuildwheel==0.7.0
 
 script:
   - cibuildwheel --output-dir wheelhouse
